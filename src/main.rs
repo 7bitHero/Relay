@@ -1,18 +1,36 @@
+// TODO: Disable this after development has come to a suitably advanced state.
+#![allow(dead_code)]
+
+#![feature(ip_addr)]
+#![feature(convert)]
+
 use std::io;
 
+mod connection_hub;
+use connection_hub::ConnectionHub;
+mod user;
+
 fn main() {
+	let mut connection_hub = ConnectionHub::new().unwrap();
+
 	// The input loop. It takes all sorts of commands registered on this virtual console.
 	loop {
 		let mut command = String::new();
 		io::stdin().read_line(&mut command).unwrap();
 
-		if command.starts_with("connect") {
+		if command.starts_with("msg") {
+			let words: Vec<&str> = command.split_whitespace().collect();
+
+			connection_hub.send_message(&words[1], &command).unwrap();
+		}
+		else if command.starts_with("connect") {
 			let words: Vec<&str> = command.split_whitespace().collect();
 
 			if words.len() == 3 {
-				let mut host = String::from(words[1]);
-				host.push_str(":");
-				host.push_str(words[2]);
+				let host = format!("{}:{}", words[1], words[2]);
+
+				println!("Connecting to {}", &host);
+				connection_hub.connect(&host.as_str()).unwrap();
 			}
 			else {
 				println!("The command 'connect' takes exactly two arguments, in the form of:\nconnect <hostname> <address>");
